@@ -280,7 +280,8 @@ export default function App() {
     setVehicleUse(job.vehicleUse);
     setNotes(job.notes || '');
     setPrice(job.price || '');
-    setInvoiceNumber(job.invoiceNumber?.replace('INV-', '') || '');
+    // Set to next available invoice number for a new invoice
+    setInvoiceNumber(companyInfo.nextInvoiceNumber?.toString() || '1001');
     setCurrentView('dispatch');
     setSelectedJobForDetails(null);
   };
