@@ -116,6 +116,7 @@ export default function App() {
        localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
        setEditingJobId(null);
        setMessage('Job updated successfully and WhatsApp opened.');
+       setCurrentView('jobList');
      } else {
        const nextNum = (parseInt(invoiceNumber) || 1000) + 1;
        setInvoiceNumber(nextNum.toString());
@@ -226,6 +227,9 @@ export default function App() {
    const hh = String(today.getHours()).padStart(2, '0');
    const min = String(today.getMinutes()).padStart(2, '0');
    setTimeReceived(`${hh}:${min}`);
+   
+   // Return to job list view
+   setCurrentView('jobList');
  };
 
   const handleGenerateInvoice = (job: Job) => {
