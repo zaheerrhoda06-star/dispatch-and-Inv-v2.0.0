@@ -281,6 +281,15 @@ export default function App() {
     setSelectedJobForDetails(null);
   };
 
+  const handleDeleteJob = (jobId: string) => {
+    if (window.confirm('Are you sure you want to delete this job? This action cannot be undone.')) {
+      const updatedJobs = jobs.filter(job => job.id !== jobId);
+      setJobs(updatedJobs);
+      localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
+      setMessage('Job deleted successfully.');
+    }
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -573,11 +582,12 @@ export default function App() {
         )}
 
         {currentView === 'jobList' && (
-          <JobList 
-            jobs={jobs} 
-            onGenerateInvoice={handleGenerateInvoice} 
-            onViewDetails={(job) => setSelectedJobForDetails(job)} 
+          <JobList
+            jobs={jobs}
+            onGenerateInvoice={handleGenerateInvoice}
+            onViewDetails={(job) => setSelectedJobForDetails(job)}
             onEditJob={handleEditJob}
+            onDeleteJob={handleDeleteJob}
           />
         )}
 

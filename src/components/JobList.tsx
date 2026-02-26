@@ -1,15 +1,17 @@
 import React from 'react';
 import { Job } from '../types';
 import { motion } from 'motion/react';
+import { Trash2 } from 'lucide-react';
 
 interface JobListProps {
   jobs: Job[];
   onGenerateInvoice: (job: Job) => void;
   onViewDetails: (job: Job) => void;
   onEditJob: (job: Job) => void;
+  onDeleteJob: (jobId: string) => void;
 }
 
-const JobList: React.FC<JobListProps> = ({ jobs, onGenerateInvoice, onViewDetails, onEditJob }) => {
+const JobList: React.FC<JobListProps> = ({ jobs, onGenerateInvoice, onViewDetails, onEditJob, onDeleteJob }) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -53,6 +55,14 @@ const JobList: React.FC<JobListProps> = ({ jobs, onGenerateInvoice, onViewDetail
                 className="bg-purple-600 hover:bg-purple-700 text-white text-sm py-2 px-4 rounded-lg"
               >
                 Generate Invoice
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => onDeleteJob(job.id)}
+                className="bg-red-600 hover:bg-red-700 text-white text-sm py-2 px-4 rounded-lg"
+              >
+                Delete
               </motion.button>
             </div>
           </div>
