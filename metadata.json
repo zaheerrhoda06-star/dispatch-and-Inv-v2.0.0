@@ -1,0 +1,5 @@
+{
+  "name": "Towing Job Manager",
+  "description": "Manage towing jobs, dispatch via WhatsApp, and generate invoices.",
+  "requestFramePermissions": []
+}
