@@ -91,17 +91,124 @@ const SavedInvoices: React.FC = () => {
     const win = window.open();
     if (win) {
       if (invoice.pdfData.startsWith('data:application/pdf')) {
-        win.document.write(`<iframe src="${invoice.pdfData}" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>`);
-      } else {
-        // For images, just show the image in the new window
         win.document.write(`
           <html>
-            <body style="margin:0; background:#525659; display:flex; justify-content:center; padding:20px;">
-              <img src="${invoice.pdfData}" style="max-width:100%; box-shadow:0 0 20px rgba(0,0,0,0.5); background:white;" />
+            <head>
+              <title>Invoice ${invoice.invoiceNumber}</title>
+              <style>
+                body { margin: 0; padding: 0; background: #525659; font-family: sans-serif; }
+                .toolbar {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  background: #1f2937;
+                  padding: 10px 20px;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  z-index: 1000;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                }
+                .close-btn {
+                  background: #dc2626;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-weight: bold;
+                  font-size: 14px;
+                }
+                .close-btn:hover { background: #b91c1c; }
+                .invoice-info { color: white; font-size: 14px; }
+                .iframe-container {
+                  margin-top: 50px;
+                  height: calc(100vh - 50px);
+                }
+                iframe { width: 100%; height: 100%; border: none; }
+              </style>
+            </head>
+            <body>
+              <div class="toolbar">
+                <div class="invoice-info">Invoice: ${invoice.invoiceNumber} - ${invoice.customerName}</div>
+                <button class="close-btn" onclick="window.close()">← Back</button>
+              </div>
+              <div class="iframe-container">
+                <iframe src="${invoice.pdfData}" frameborder="0" allowfullscreen></iframe>
+              </div>
+            </body>
+          </html>
+        `);
+      } else {
+        // For images, show with a back button
+        win.document.write(`
+          <html>
+            <head>
+              <title>Invoice ${invoice.invoiceNumber}</title>
+              <style>
+                body {
+                  margin: 0;
+                  padding: 0;
+                  background: #525659;
+                  font-family: sans-serif;
+                  display: flex;
+                  flex-direction: column;
+                  min-height: 100vh;
+                }
+                .toolbar {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  background: #1f2937;
+                  padding: 10px 20px;
+                  display: flex;
+                  justify-content: space-between;
+                  align-items: center;
+                  z-index: 1000;
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+                }
+                .close-btn {
+                  background: #dc2626;
+                  color: white;
+                  border: none;
+                  padding: 8px 16px;
+                  border-radius: 6px;
+                  cursor: pointer;
+                  font-weight: bold;
+                  font-size: 14px;
+                }
+                .close-btn:hover { background: #b91c1c; }
+                .invoice-info { color: white; font-size: 14px; }
+                .content {
+                  margin-top: 50px;
+                  flex: 1;
+                  display: flex;
+                  justify-content: center;
+                  padding: 20px;
+                  overflow: auto;
+                }
+                img {
+                  max-width: 100%;
+                  box-shadow: 0 0 20px rgba(0,0,0,0.5);
+                  background: white;
+                }
+              </style>
+            </head>
+            <body>
+              <div class="toolbar">
+                <div class="invoice-info">Invoice: ${invoice.invoiceNumber} - ${invoice.customerName}</div>
+                <button class="close-btn" onclick="window.close()">← Back</button>
+              </div>
+              <div class="content">
+                <img src="${invoice.pdfData}" />
+              </div>
             </body>
           </html>
         `);
       }
+      win.document.close();
     }
   };
 

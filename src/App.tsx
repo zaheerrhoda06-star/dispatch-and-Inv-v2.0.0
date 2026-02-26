@@ -68,118 +68,165 @@ export default function App() {
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setLoading(true);
-    setMessage('');
+   e.preventDefault();
+   setLoading(true);
+   setMessage('');
 
-    const jobDetails = `*${editingJobId ? 'Updated' : 'New'} Towing Job*\n\n` +
-                       `*Invoice Number:* INV-${invoiceNumber}\n` +
-                       `*Date:* ${date}\n` +
-                       `*Time Received:* ${timeReceived}\n` +
-                       `*OB Number:* ${obNumber}\n` +
-                       `*Customer:* ${customerName}\n` +
-                       `*Contact on Scene:* ${contactOnScene}\n` +
-                       `*Pickup:* ${pickupLocation}\n` +
-                       (dropoffLocation ? `*Dropoff:* ${dropoffLocation}\n` : '') +
-                       `*Vehicle:* ${vehicleDetails}\n` +
-                       `*Tow Class:* ${towClass}\n` +
-                       `*Vehicle Use:* ${vehicleUse}\n` +
-                       (notes ? `*Notes:* ${notes}\n` : '');
+   const jobDetails = `*${editingJobId ? 'Updated' : 'New'} Towing Job*\n\n` +
+                      `*Invoice Number:* INV-${invoiceNumber}\n` +
+                      `*Date:* ${date}\n` +
+                      `*Time Received:* ${timeReceived}\n` +
+                      `*OB Number:* ${obNumber}\n` +
+                      `*Customer:* ${customerName}\n` +
+                      `*Contact on Scene:* ${contactOnScene}\n` +
+                      `*Pickup:* ${pickupLocation}\n` +
+                      (dropoffLocation ? `*Dropoff:* ${dropoffLocation}\n` : '') +
+                      `*Vehicle:* ${vehicleDetails}\n` +
+                      `*Tow Class:* ${towClass}\n` +
+                      `*Vehicle Use:* ${vehicleUse}\n` +
+                      (notes ? `*Notes:* ${notes}\n` : '');
 
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(jobDetails)}`;
+   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(jobDetails)}`;
 
-    // Clear price field only if it was set for the job, but not sent to WhatsApp
-    setPrice('');
+   // Clear price field only if it was set for the job, but not sent to WhatsApp
+   setPrice('');
 
-    try {
-      window.open(whatsappUrl, '_blank');
-      setMessage('WhatsApp opened with job details. Please select a contact to send.');
-      
-      if (editingJobId) {
-        const updatedJobs = jobs.map(j => j.id === editingJobId ? {
-          ...j,
-          date,
-          timeReceived,
-          obNumber,
-          customerName,
-          contactOnScene,
-          pickupLocation,
-          dropoffLocation,
-          vehicleDetails,
-          towClass,
-          vehicleUse,
-          notes,
-          price: price === '' ? undefined : price,
-          invoiceNumber: `INV-${invoiceNumber}`
-        } : j);
-        setJobs(updatedJobs);
-        localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
-        setEditingJobId(null);
-        setMessage('Job updated successfully and WhatsApp opened.');
-      } else {
-        const nextNum = (parseInt(invoiceNumber) || 1000) + 1;
-        setInvoiceNumber(nextNum.toString());
+   try {
+     window.open(whatsappUrl, '_blank');
+     setMessage('WhatsApp opened with job details. Please select a contact to send.');
+     
+     if (editingJobId) {
+       const updatedJobs = jobs.map(j => j.id === editingJobId ? {
+         ...j,
+         date,
+         timeReceived,
+         obNumber,
+         customerName,
+         contactOnScene,
+         pickupLocation,
+         dropoffLocation,
+         vehicleDetails,
+         towClass,
+         vehicleUse,
+         notes,
+         price: price === '' ? undefined : price,
+         invoiceNumber: `INV-${invoiceNumber}`
+       } : j);
+       setJobs(updatedJobs);
+       localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
+       setEditingJobId(null);
+       setMessage('Job updated successfully and WhatsApp opened.');
+     } else {
+       const nextNum = (parseInt(invoiceNumber) || 1000) + 1;
+       setInvoiceNumber(nextNum.toString());
 
-        const newJob: Job = {
-          id: Date.now().toString(), // Simple unique ID
-          date,
-          timeReceived,
-          obNumber,
-          customerName,
-          contactOnScene,
-          pickupLocation,
-          dropoffLocation,
-          vehicleDetails,
-          towClass,
-          vehicleUse,
-          notes,
-          price: price === '' ? undefined : price,
-          invoiceGenerated: true, // Mark as generated since we provided a number
-          invoiceNumber: `INV-${invoiceNumber}`,
-        };
+       const newJob: Job = {
+         id: Date.now().toString(), // Simple unique ID
+         date,
+         timeReceived,
+         obNumber,
+         customerName,
+         contactOnScene,
+         pickupLocation,
+         dropoffLocation,
+         vehicleDetails,
+         towClass,
+         vehicleUse,
+         notes,
+         price: price === '' ? undefined : price,
+         invoiceGenerated: true, // Mark as generated since we provided a number
+         invoiceNumber: `INV-${invoiceNumber}`,
+       };
 
-        const updatedJobs = [...jobs, newJob];
-        setJobs(updatedJobs);
-        localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
+       const updatedJobs = [...jobs, newJob];
+       setJobs(updatedJobs);
+       localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
 
-        // Update company info with the next number
-        const updatedCompanyInfo = {
-          ...companyInfo,
-          nextInvoiceNumber: nextNum
-        };
-        setCompanyInfo(updatedCompanyInfo);
-        localStorage.setItem('companyInfo', JSON.stringify(updatedCompanyInfo));
-      }
+       // Update company info with the next number
+       const updatedCompanyInfo = {
+         ...companyInfo,
+         nextInvoiceNumber: nextNum
+       };
+       setCompanyInfo(updatedCompanyInfo);
+       localStorage.setItem('companyInfo', JSON.stringify(updatedCompanyInfo));
+     }
 
-      // Clear form AFTER processing
-      setCustomerName('');
-      setContactOnScene('');
-      setPickupLocation('');
-      setDropoffLocation('');
-      setVehicleDetails('');
-      setNotes('');
-      setTowClass('Normal Recovery');
-      setVehicleUse('Normal Sling');
-      setObNumber('');
-      setPrice('');
-      
-      // Reset date and time to current
-      const today = new Date();
-      const yyyy = today.getFullYear();
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
-      const dd = String(today.getDate()).padStart(2, '0');
-      setDate(`${yyyy}-${mm}-${dd}`);
-      const hh = String(today.getHours()).padStart(2, '0');
-      const min = String(today.getMinutes()).padStart(2, '0');
-      setTimeReceived(`${hh}:${min}`);
+     // Clear form AFTER processing
+     setCustomerName('');
+     setContactOnScene('');
+     setPickupLocation('');
+     setDropoffLocation('');
+     setVehicleDetails('');
+     setNotes('');
+     setTowClass('Normal Recovery');
+     setVehicleUse('Normal Sling');
+     setObNumber('');
+     setPrice('');
+     
+     // Reset date and time to current
+     const today = new Date();
+     const yyyy = today.getFullYear();
+     const mm = String(today.getMonth() + 1).padStart(2, '0');
+     const dd = String(today.getDate()).padStart(2, '0');
+     setDate(`${yyyy}-${mm}-${dd}`);
+     const hh = String(today.getHours()).padStart(2, '0');
+     const min = String(today.getMinutes()).padStart(2, '0');
+     setTimeReceived(`${hh}:${min}`);
 
-    } catch (error) {
-      console.error('Error opening WhatsApp:', error);
-      setMessage('An error occurred while trying to open WhatsApp.');
-    } finally {
-      setLoading(false);
-    }
-  };
+   } catch (error) {
+     console.error('Error opening WhatsApp:', error);
+     setMessage('An error occurred while trying to open WhatsApp.');
+   } finally {
+     setLoading(false);
+   }
+ };
+
+ const handleSaveOnly = () => {
+   if (!editingJobId) return;
+   
+   const updatedJobs = jobs.map(j => j.id === editingJobId ? {
+     ...j,
+     date,
+     timeReceived,
+     obNumber,
+     customerName,
+     contactOnScene,
+     pickupLocation,
+     dropoffLocation,
+     vehicleDetails,
+     towClass,
+     vehicleUse,
+     notes,
+     price: price === '' ? undefined : price,
+     invoiceNumber: `INV-${invoiceNumber}`
+   } : j);
+   setJobs(updatedJobs);
+   localStorage.setItem('towingJobs', JSON.stringify(updatedJobs));
+   setEditingJobId(null);
+   setMessage('Job saved successfully.');
+   
+   // Clear form after saving
+   setCustomerName('');
+   setContactOnScene('');
+   setPickupLocation('');
+   setDropoffLocation('');
+   setVehicleDetails('');
+   setNotes('');
+   setTowClass('Normal Recovery');
+   setVehicleUse('Normal Sling');
+   setObNumber('');
+   setPrice('');
+   
+   // Reset date and time to current
+   const today = new Date();
+   const yyyy = today.getFullYear();
+   const mm = String(today.getMonth() + 1).padStart(2, '0');
+   const dd = String(today.getDate()).padStart(2, '0');
+   setDate(`${yyyy}-${mm}-${dd}`);
+   const hh = String(today.getHours()).padStart(2, '0');
+   const min = String(today.getMinutes()).padStart(2, '0');
+   setTimeReceived(`${hh}:${min}`);
+ };
 
   const handleGenerateInvoice = (job: Job) => {
     if (job.invoiceGenerated && job.invoiceNumber) {
@@ -490,15 +537,38 @@ export default function App() {
               ></textarea>
             </div>
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-              disabled={loading}
-            >
-              {loading ? 'Dispatching...' : 'Dispatch Job via WhatsApp'}
-            </motion.button>
+            {editingJobId ? (
+              <div className="flex gap-3">
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="button"
+                  onClick={handleSaveOnly}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 ease-in-out"
+                >
+                  Save Changes
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={loading}
+                >
+                  {loading ? 'Dispatching...' : 'Dispatch & Save'}
+                </motion.button>
+              </div>
+            ) : (
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading}
+              >
+                {loading ? 'Dispatching...' : 'Dispatch Job via WhatsApp'}
+              </motion.button>
+            )}
           </form>
         )}
 

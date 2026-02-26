@@ -28,7 +28,7 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ job, companyInfo, o
 
       const element = invoiceRef.current;
       const canvas = await html2canvas(element, {
-        scale: 2,
+        scale: 1.5,
         useCORS: true,
         logging: false,
         backgroundColor: '#ffffff',
@@ -61,19 +61,16 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ job, companyInfo, o
       const imgWidth = pdfWidth;
       const imgHeight = (imgProps.height * imgWidth) / imgProps.width;
 
-      let heightLeft = imgHeight;
-      let position = 0;
-
-      // Add first page
-      pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pdfHeight;
-
-      // Add subsequent pages if content is longer than one A4 page
-      while (heightLeft > 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
+      // Only add image if it fits on one page, otherwise scale to fit
+      if (imgHeight <= pdfHeight) {
+        pdf.addImage(imgData, 'JPEG', 0, 0, imgWidth, imgHeight);
+      } else {
+        // Scale down to fit on one page
+        const scaleFactor = pdfHeight / imgHeight;
+        const scaledWidth = imgWidth * scaleFactor;
+        const scaledHeight = imgHeight * scaleFactor;
+        const xOffset = (pdfWidth - scaledWidth) / 2;
+        pdf.addImage(imgData, 'JPEG', xOffset, 0, scaledWidth, scaledHeight);
       }
       
       // Save to Local Storage (Record only)
@@ -150,68 +147,129 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ job, companyInfo, o
           ref={invoiceRef}
           id="invoice-container"
           className="bg-white mx-auto shadow-2xl"
-          style={{ 
-            width: '794px', 
+          style={{
+            width: '794px',
             minHeight: '1123px', // A4 height at 96 DPI
-            color: '#111827', 
+            color: '#1f2937',
             backgroundColor: '#ffffff',
-            fontFamily: 'sans-serif',
+            fontFamily: 'Inter, system-ui, -apple-system, sans-serif',
             margin: '0 auto'
           }}
         >
-        {/* Header Section */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '40px', borderBottom: '2px solid #f3f4f6' }}>
-          <div style={{ flex: 1 }}>
+        {/* Modern Header with accent bar */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          padding: '0',
+          borderBottom: '4px solid #10b981',
+          background: 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'
+        }}>
+          <div style={{ flex: 1, padding: '20px 24px 20px 24px' }}>
             {companyInfo.logoUrl && (
-              <img src={companyInfo.logoUrl} alt="Logo" style={{ height: '80px', marginBottom: '20px', objectFit: 'contain' }} referrerPolicy="no-referrer" />
+              <img src={companyInfo.logoUrl} alt="Logo" style={{ height: '48px', marginBottom: '12px', objectFit: 'contain' }} referrerPolicy="no-referrer" />
             )}
-            <h1 style={{ fontSize: '32px', fontWeight: 'bold', color: '#047857', margin: '0 0 10px 0' }}>INVOICE</h1>
-            <p style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{companyInfo.name}</p>
-            <p style={{ fontSize: '14px', color: '#4b5563', margin: '0', maxWidth: '300px' }}>{companyInfo.address}</p>
-            <p style={{ fontSize: '14px', color: '#4b5563', margin: '5px 0 0 0' }}>Phone: {companyInfo.phone}</p>
-            <p style={{ fontSize: '14px', color: '#4b5563', margin: '0' }}>Email: {companyInfo.email}</p>
-            {companyInfo.registrationNumber && <p style={{ fontSize: '14px', color: '#4b5563', margin: '0' }}>Reg: {companyInfo.registrationNumber}</p>}
+            <h1 style={{ fontSize: '28px', fontWeight: '800', color: '#10b981', margin: '0 0 8px 0', letterSpacing: '-0.5px' }}>INVOICE</h1>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: '#1f2937', margin: '0 0 4px 0' }}>{companyInfo.name}</p>
+            <p style={{ fontSize: '13px', color: '#6b7280', margin: '0', maxWidth: '320px', lineHeight: '1.5' }}>{companyInfo.address}</p>
+            <div style={{ display: 'flex', gap: '16px', marginTop: '6px', flexWrap: 'wrap' }}>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0' }}>📞 {companyInfo.phone}</p>
+              <p style={{ fontSize: '13px', color: '#6b7280', margin: '0' }}>✉ {companyInfo.email}</p>
+            </div>
+            {companyInfo.registrationNumber && <p style={{ fontSize: '13px', color: '#6b7280', margin: '6px 0 0 0' }}>Reg: {companyInfo.registrationNumber}</p>}
           </div>
           
-          <div style={{ textAlign: 'right', minWidth: '200px' }}>
-            <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#6b7280', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Invoice #</p>
-              <p style={{ fontSize: '20px', fontWeight: 'bold', color: '#111827', margin: '0 0 15px 0' }}>{invoiceNumber}</p>
+          <div style={{ textAlign: 'right', padding: '20px 24px 20px 24px', minWidth: '180px' }}>
+            <div style={{
+              backgroundColor: '#f9fafb',
+              padding: '16px',
+              borderRadius: '12px',
+              border: '1px solid #e5e7eb',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
+            }}>
+              <p style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Invoice Number</p>
+              <p style={{ fontSize: '20px', fontWeight: '800', color: '#10b981', margin: '0 0 12px 0', letterSpacing: '-0.5px' }}>{invoiceNumber}</p>
               
-              <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#6b7280', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Date</p>
-              <p style={{ fontSize: '16px', fontWeight: 'bold', color: '#111827', margin: '0' }}>{invoiceDate}</p>
+              <p style={{ fontSize: '11px', fontWeight: '600', color: '#6b7280', margin: '0 0 4px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Invoice Date</p>
+              <p style={{ fontSize: '14px', fontWeight: '600', color: '#1f2937', margin: '0' }}>{invoiceDate}</p>
             </div>
           </div>
         </div>
 
-        {/* Billing & Job Info */}
-        <div style={{ padding: '40px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '40px' }}>
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#047857', borderBottom: '1px solid #d1fae5', paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase' }}>Bill To</h3>
-            <p style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 0 5px 0' }}>{job.customerName}</p>
-            <p style={{ fontSize: '14px', color: '#4b5563', margin: '0' }}>OB Number: {job.obNumber}</p>
+        {/* Two-column info section */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '0',
+          borderBottom: '1px solid #e5e7eb'
+        }}>
+          <div style={{
+            padding: '20px 24px 20px 24px',
+            borderRight: '1px solid #e5e7eb'
+          }}>
+            <h2 style={{
+              fontSize: '12px',
+              fontWeight: '700',
+              color: '#10b981',
+              margin: '0 0 12px 0',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>Bill To</h2>
+            <p style={{ fontSize: '16px', fontWeight: '700', color: '#1f2937', margin: '0 0 6px 0' }}>{job.customerName}</p>
+            <p style={{ fontSize: '13px', color: '#6b7280', margin: '0' }}>OB Number: <span style={{ fontWeight: '600', color: '#1f2937' }}>{job.obNumber}</span></p>
           </div>
           
-          <div>
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#047857', borderBottom: '1px solid #d1fae5', paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase' }}>Job Details</h3>
-            <p style={{ fontSize: '14px', margin: '0 0 5px 0' }}><strong>Vehicle:</strong> {job.vehicleDetails}</p>
-            <p style={{ fontSize: '14px', margin: '0 0 5px 0' }}><strong>Received:</strong> {job.timeReceived}</p>
-            <p style={{ fontSize: '14px', margin: '0' }}><strong>Type:</strong> {job.towClass} - {job.vehicleUse}</p>
+          <div style={{ padding: '20px 24px 20px 24px' }}>
+            <h2 style={{
+              fontSize: '12px',
+              fontWeight: '700',
+              color: '#10b981',
+              margin: '0 0 12px 0',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>Job Details</h2>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: '13px', color: '#4b5563' }}>
+              <div style={{ fontWeight: '600', color: '#1f2937' }}>Vehicle:</div>
+              <div style={{ color: '#4b5563' }}>{job.vehicleDetails}</div>
+              <div style={{ fontWeight: '600', color: '#1f2937' }}>Received:</div>
+              <div style={{ color: '#4b5563' }}>{job.timeReceived}</div>
+              <div style={{ fontWeight: '600', color: '#1f2937' }}>Type:</div>
+              <div style={{ color: '#4b5563' }}>{job.towClass} - {job.vehicleUse}</div>
+            </div>
           </div>
         </div>
 
         {/* Locations Section */}
-        <div style={{ padding: '0 40px 40px 40px' }}>
-          <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#047857', borderBottom: '1px solid #d1fae5', paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase' }}>Service Locations</h3>
-          <div style={{ backgroundColor: '#f9fafb', padding: '20px', borderRadius: '12px', border: '1px solid #e5e7eb' }}>
-            <div style={{ marginBottom: '15px' }}>
-              <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#059669', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Pickup Location</p>
-              <p style={{ fontSize: '14px', margin: '0' }}>{job.pickupLocation}</p>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb' }}>
+          <h2 style={{
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#10b981',
+            margin: '0 0 12px 0',
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
+          }}>Service Locations</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{
+              backgroundColor: '#f0fdf4',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              border: '1px solid #d1fae5',
+              borderLeft: '3px solid #10b981'
+            }}>
+              <p style={{ fontSize: '10px', fontWeight: '700', color: '#059669', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Pickup Location</p>
+              <p style={{ fontSize: '14px', color: '#1f2937', margin: '0', lineHeight: '1.5' }}>{job.pickupLocation}</p>
             </div>
             {job.dropoffLocation && (
-              <div>
-                <p style={{ fontSize: '10px', fontWeight: 'bold', color: '#dc2626', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Dropoff Location</p>
-                <p style={{ fontSize: '14px', margin: '0' }}>{job.dropoffLocation}</p>
+              <div style={{
+                backgroundColor: '#fef2f2',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                border: '1px solid #fecaca',
+                borderLeft: '3px solid #ef4444'
+              }}>
+                <p style={{ fontSize: '10px', fontWeight: '700', color: '#dc2626', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dropoff Location</p>
+                <p style={{ fontSize: '14px', color: '#1f2937', margin: '0', lineHeight: '1.5' }}>{job.dropoffLocation}</p>
               </div>
             )}
           </div>
@@ -219,36 +277,69 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ job, companyInfo, o
 
         {/* Notes Section */}
         {job.notes && (
-          <div style={{ padding: '0 40px 40px 40px' }}>
-            <h3 style={{ fontSize: '14px', fontWeight: 'bold', color: '#047857', borderBottom: '1px solid #d1fae5', paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase' }}>Notes</h3>
-            <p style={{ fontSize: '14px', color: '#4b5563', fontStyle: 'italic', margin: '0' }}>{job.notes}</p>
+          <div style={{ padding: '20px 24px', borderBottom: '1px solid #e5e7eb' }}>
+            <h2 style={{
+              fontSize: '12px',
+              fontWeight: '700',
+              color: '#10b981',
+              margin: '0 0 12px 0',
+              textTransform: 'uppercase',
+              letterSpacing: '1px'
+            }}>Notes</h2>
+            <p style={{
+              fontSize: '14px',
+              color: '#4b5563',
+              fontStyle: 'italic',
+              margin: '0',
+              lineHeight: '1.6',
+              backgroundColor: '#f9fafb',
+              padding: '12px 16px',
+              borderRadius: '8px',
+              border: '1px solid #f3f4f6'
+            }}>{job.notes}</p>
           </div>
         )}
 
         {/* Footer & Payment Info */}
-        <div style={{ marginTop: 'auto', padding: '40px', borderTop: '2px solid #047857', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+        <div style={{
+          marginTop: 'auto',
+          padding: '24px',
+          backgroundColor: '#f9fafb',
+          borderTop: '3px solid #10b981',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          gap: '24px'
+        }}>
           <div style={{ flex: 1 }}>
             {(companyInfo.bankName || companyInfo.accountNumber || companyInfo.sortCode) && (
-              <div style={{ backgroundColor: '#f9fafb', padding: '15px', borderRadius: '8px', border: '1px solid #f3f4f6', maxWidth: '300px' }}>
-                <p style={{ fontSize: '12px', fontWeight: 'bold', color: '#111827', margin: '0 0 10px 0', textTransform: 'uppercase' }}>Payment Details</p>
-                <table style={{ width: '100%', fontSize: '12px', borderCollapse: 'collapse' }}>
+              <div style={{
+                backgroundColor: '#ffffff',
+                padding: '16px',
+                borderRadius: '10px',
+                border: '1px solid #e5e7eb',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                maxWidth: '300px'
+              }}>
+                <p style={{ fontSize: '11px', fontWeight: '700', color: '#6b7280', margin: '0 0 12px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Details</p>
+                <table style={{ width: '100%', fontSize: '13px', borderCollapse: 'collapse' }}>
                   <tbody>
                     {companyInfo.bankName && (
                       <tr>
-                        <td style={{ color: '#6b7280', padding: '2px 0' }}>Bank:</td>
-                        <td style={{ fontWeight: 'bold', textAlign: 'right' }}>{companyInfo.bankName}</td>
+                        <td style={{ color: '#6b7280', padding: '6px 0', fontWeight: '500' }}>Bank:</td>
+                        <td style={{ fontWeight: '700', textAlign: 'right', color: '#1f2937' }}>{companyInfo.bankName}</td>
                       </tr>
                     )}
                     {companyInfo.accountNumber && (
                       <tr>
-                        <td style={{ color: '#6b7280', padding: '2px 0' }}>Account:</td>
-                        <td style={{ fontWeight: 'bold', textAlign: 'right' }}>{companyInfo.accountNumber}</td>
+                        <td style={{ color: '#6b7280', padding: '6px 0', fontWeight: '500' }}>Account:</td>
+                        <td style={{ fontWeight: '700', textAlign: 'right', color: '#1f2937' }}>{companyInfo.accountNumber}</td>
                       </tr>
                     )}
                     {companyInfo.sortCode && (
                       <tr>
-                        <td style={{ color: '#6b7280', padding: '2px 0' }}>Branch Code:</td>
-                        <td style={{ fontWeight: 'bold', textAlign: 'right' }}>{companyInfo.sortCode}</td>
+                        <td style={{ color: '#6b7280', padding: '6px 0', fontWeight: '500' }}>Branch Code:</td>
+                        <td style={{ fontWeight: '700', textAlign: 'right', color: '#1f2937' }}>{companyInfo.sortCode}</td>
                       </tr>
                     )}
                   </tbody>
@@ -258,16 +349,23 @@ const InvoiceGenerator: React.FC<InvoiceGeneratorProps> = ({ job, companyInfo, o
           </div>
           
           <div style={{ textAlign: 'right' }}>
-            <p style={{ fontSize: '14px', fontWeight: 'bold', color: '#6b7280', margin: '0 0 5px 0', textTransform: 'uppercase' }}>Total Amount</p>
-            <p style={{ fontSize: '42px', fontWeight: 'bold', color: '#047857', margin: '0' }}>
+            <p style={{ fontSize: '12px', fontWeight: '600', color: '#6b7280', margin: '0 0 6px 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Amount Due</p>
+            <p style={{ fontSize: '36px', fontWeight: '800', color: '#10b981', margin: '0', letterSpacing: '-1px' }}>
               {job.price ? `R${job.price.toFixed(2)}` : 'R [Manual]'}
             </p>
-            {!job.price && <p style={{ fontSize: '10px', color: '#9ca3af', marginTop: '5px' }}>* Please enter amount manually *</p>}
+            {!job.price && <p style={{ fontSize: '11px', color: '#ef4444', marginTop: '6px', fontWeight: '500' }}>* Amount needs to be entered *</p>}
           </div>
         </div>
 
-        <div style={{ padding: '20px 40px 40px 40px', textAlign: 'center', color: '#9ca3af', fontSize: '12px' }}>
-          <p>Thank you for choosing {companyInfo.name}!</p>
+        <div style={{
+          padding: '16px 24px',
+          textAlign: 'center',
+          backgroundColor: '#10b981',
+          color: 'white',
+          fontSize: '13px',
+          fontWeight: '500'
+        }}>
+          <p style={{ margin: 0 }}>Thank you for choosing {companyInfo.name}!</p>
         </div>
       </div>
       </div>
